@@ -1,130 +1,69 @@
-//
-// Created by junio on 03/11/2025.
-//
-#include "jogador.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include "utils.h"
+#include "jogador.h"
+#include "territorio.h"
 
-void playerRegistry(Player jogadores[], int *numJogadores) {
-    printf("\n========================== REGISTRO DE JOGADORES ==========================\n");
-    printf("Quantidade de jogadores (2 a %d): ", MAX_PLAYERS);
-    scanf("%d", numJogadores);
-    limparBufferDeEntrada();
-
-    while (*numJogadores < 2 || *numJogadores > MAX_PLAYERS) {
-        printf("Número inválido! Digite um valor entre 2 e %d: ", MAX_PLAYERS);
-        scanf("%d", numJogadores);
-        limparBufferDeEntrada();
+// Função para gerenciar missões dos jogadores
+// Aloca memória para os jogadores e define missões iniciais.
+Jogador* gerenciarMissoes(int numJogadores) {
+    Jogador* jogadores = (Jogador*)malloc(numJogadores * sizeof(Jogador));
+    if (jogadores == NULL) {
+        printf("Erro ao alocar memória para os jogadores.\n");
+        return NULL;
     }
 
-    for (int i = 0; i < *numJogadores; i++) {
-        printf("\n--- Jogador %d ---\n", i + 1);
-        printf("Nome do Jogador: ");
-        fgets(jogadores[i].playerName, MAX_NAME, stdin);
-        jogadores[i].playerName[strcspn(jogadores[i].playerName, "\n")] = '\0';
-
-        printf("Cor do exército (ex: Vermelho, Azul, Preto ou Amarelo): ");
-        fgets(jogadores[i].armyColor, 10, stdin);
-        jogadores[i].armyColor[strcspn(jogadores[i].armyColor, "\n")] = '\0';
-
-        jogadores[i].totalTerritories = 0;
-        jogadores[i].totalTroops = 0;
+    for (int i = 0; i < numJogadores; i++) {
+        snprintf(jogadores[i].missao, sizeof(jogadores[i].missao), "Missão %d", i + 1);
+        printf("Missão do jogador %d: %s\n", i + 1, jogadores[i].missao);
     }
 
-    printf("\n=================== Generais alistados! Preparem-se para guerra! ===================\n");
-    for (int i = 0; i < *numJogadores; i++) {
-        printf("Jogador %d: General %s - Exército: %s\n",
-               i + 1, jogadores[i].playerName, jogadores[i].armyColor);
+    return jogadores;
+}
+
+// Função para verificar o progresso das missões
+// Avalia se os jogadores cumpriram suas missões com base no estado atual do mapa.
+void verificarMissoes(Jogador* jogadores, int numJogadores, const Territorio* mapa, int tamanho) {
+    for (int i = 0; i < numJogadores; i++) {
+        printf("Missão do jogador %s: %s\n", jogadores[i].nome, jogadores[i].missao);
+
+        if (strstr(jogadores[i].missao, "10 tropas")) {
+            for (int j = 0; j < tamanho; j++) {
+                if (mapa[j].tropas >= 10 && strcmp(mapa[j].cor, jogadores[i].cor) == 0) {
+                    printf("Jogador %s cumpriu sua missão: %s\n", jogadores[i].nome, jogadores[i].missao);
+                    break;
+                }
+            }
+        } else if (strstr(jogadores[i].missao, "Dominar 8 territórios")) {
+            int count = 0;
+            for (int j = 0; j < tamanho; j++) {
+                if (strcmp(mapa[j].cor, jogadores[i].cor) == 0) {
+                    count++;
+                }
+            }
+            if (count >= 8) {
+                printf("Jogador %s cumpriu sua missão: %s\n", jogadores[i].nome, jogadores[i].missao);
+            }
+        } else {
+            printf("Missão do jogador %s ainda não implementada.\n", jogadores[i].nome);
+        }
     }
 }
 
-//os jogadores escolheram os seus territórios , o território escolhido receberá o armyColor do jogador
-void chooseInitialTerritories(Player jogadores[], int numJogadores, Territory mapa[], int totalTerritories) {
-
-    char escolha[MAX_NAME];
-    char escolhaLower[MAX_NAME];
-
-    printf("\n=================== Fase de escolhas de território ===================\n");
-
-    //a fase de escolhas terá 5 rodadas durante essas 5 rodadas cada jogador escolherá 1 território
-    for (int r = 0; r < MAX_PLAYER_TERRITORIES; r++) {
-        for (int j = 0; j < numJogadores; j++) {
-            int find = 0;
-
-            do {
-                printf("\n-------------- Teatro de Guerra atual --------------\n");
-                for (int m = 0; m < totalTerritories; m++) {
-                    if (mapa[m].name[0] == '\0') continue;
-                    printf("- %20s | %-15s | Dono: %s\n",
-                           mapa[m].name, mapa[m].continent,
-                           (mapa[m].dono[0] == '\0') ? "Livre" : mapa[m].dono);
-                }
-
-                printf("\n%s (%s), escolha um território disponível: ",
-                       jogadores[j].playerName, jogadores[j].armyColor);
-
-                if (fgets(escolha, sizeof(escolha), stdin) == NULL) {
-                    escolha[0] = '\0';
-                } else {
-                    escolha[strcspn(escolha, "\n")] = '\0';
-                }
-
-                // lowercase copy for case-insensitive compare
-                for (size_t k = 0; k < sizeof(escolhaLower) - 1 && escolha[k]; k++) {
-                    escolhaLower[k] = (char)tolower((unsigned char)escolha[k]);
-                    escolhaLower[k+1] = '\0';
-                }
-
-                // buscar no mapa
-                find = 0;
-                for (int m = 0; m < totalTerritories; m++) {
-                    if (mapa[m].name[0] == '\0') continue;
-
-                    // cria versão lowercase do nome do mapa
-                    char mapaLower[MAX_NAME];
-                    for (size_t x = 0; x < sizeof(mapaLower) - 1 && mapa[m].name[x]; x++) {
-                        mapaLower[x] = (char)tolower((unsigned char)mapa[m].name[x]);
-                        mapaLower[x+1] = '\0';
-                    }
-
-                    if (strcmp(escolhaLower, mapaLower) == 0) {
-                        // encontrado
-                        if (mapa[m].dono[0] == '\0') {
-                            // atribui dono e copia para os territórios do jogador
-                            strncpy(mapa[m].dono, jogadores[j].armyColor, sizeof(mapa[m].dono)-1);
-                            mapa[m].dono[sizeof(mapa[m].dono)-1] = '\0';
-
-                            if (jogadores[j].totalTerritories < MAX_PLAYER_TERRITORIES) {
-                                jogadores[j].playerTerritories[jogadores[j].totalTerritories++] = mapa[m];
-                            }
-                            printf("\nParabéns %s conquistou %s!\n", jogadores[j].playerName, mapa[m].name);
-                            find = 1;
-                            break;
-                        } else {
-                            printf("\nEsse território já pertence a %s.\n", mapa[m].dono);
-                            find = 0;
-                            break;
-                        }
-                    }
-                }
-
-                if (!find) {
-                    printf("Território não encontrado ou indisponível. Tente novamente.\n");
-                }
-
-            } while (!find);
-        }
+// Função para inicializar os jogadores
+// Aloca memória e define nomes, pontos e missões iniciais para cada jogador.
+Jogador* inicializarJogadores(int numJogadores) {
+    Jogador* jogadores = (Jogador*)malloc(numJogadores * sizeof(Jogador));
+    if (jogadores == NULL) {
+        printf("Erro ao alocar memória para os jogadores.\n");
+        return NULL;
     }
 
-    printf("\n=================== Distribuição completa! ===================\n");
-
-    for (int j = 0; j < numJogadores; j++) {
-        printf("\n%s (%s):\n", jogadores[j].playerName, jogadores[j].armyColor);
-
-        for (int t = 0; t < jogadores[j].totalTerritories; t++) {
-            printf(" - %s\n", jogadores[j].playerTerritories[t].name);
-        }
+    for (int i = 0; i < numJogadores; i++) {
+        snprintf(jogadores[i].nome, sizeof(jogadores[i].nome), "Jogador %d", i + 1);
+        jogadores[i].pontos = 0;
+        snprintf(jogadores[i].missao, sizeof(jogadores[i].missao), "Missão %d", i + 1);
     }
+
+    return jogadores;
 }

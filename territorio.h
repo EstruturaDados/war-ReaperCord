@@ -1,22 +1,19 @@
-//
-// Created by junio on 03/11/2025.
-//
-#ifndef WAR_REAPERCORD_TERRITORIO_H
-#define WAR_REAPERCORD_TERRITORIO_H
+#ifndef TERRITORIO_H
+#define TERRITORIO_H
 
-#define MAX_NAME 30
-#define MAX_TERRITORIES 20
+typedef struct {
+    char nome[30];
+    char cor[10];
+    int tropas;
+} Territorio;
 
-typedef struct territory {
-    char name[MAX_NAME];
-    char continent[MAX_NAME];
-    char armyColor[10];
-    int troops;
-    char dono[MAX_NAME];
-} Territory;
-
-// carrega os nomes dos territórios, sem número fixo
-void initTerritories(Territory mapa[]);
-Territory* getTerritoryByName(const char *name);
+Territorio* alocarMapa(int tamanho);
+void cadastrarTerritorios(Territorio* mapa, int tamanho);
+void exibirMapa(const Territorio* mapa, int tamanho);
+void atacar(Territorio* atacante, Territorio* defensor);
+void realizarAtaque(Territorio* origem, Territorio* destino, const char* corJogador);
+void inicializarTerritorios(Territorio* mapa, int tamanho);
+void moverTropas(Territorio* origem, Territorio* destino, int quantidade, const char* corJogador);
+void exibirTerritoriosJogador(const Territorio* mapa, int tamanho, const char* corJogador);
 
 #endif

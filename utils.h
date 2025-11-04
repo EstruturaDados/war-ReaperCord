@@ -1,10 +1,9 @@
-//
-// Created by junio on 03/11/2025.
-//
-
 #ifndef UTILS_H
 #define UTILS_H
 
-void limparBufferDeEntrada(void);
+#include "territorio.h"
 
-#endif // UTILS_H
+void limparBufferEntrada();
+void liberarMemoria(Territorio* mapa, char** missoes, int numJogadores);
+
+#endif

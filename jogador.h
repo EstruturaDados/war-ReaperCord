@@ -1,25 +1,16 @@
-//
-// Created by junio on 03/11/2025.
-//
-
-#ifndef WAR_REAPERCORD_JOGADOR_H
-#define WAR_REAPERCORD_JOGADOR_H
+#ifndef JOGADOR_H
+#define JOGADOR_H
 
 #include "territorio.h"
 
-#define MAX_PLAYERS 4
-#define MAX_PLAYER_TERRITORIES 5
+typedef struct {
+    char nome[50];
+    char cor[20]; // Adiciona o campo para a cor do jogador
+    int pontos;
+    char missao[100];
+} Jogador;
 
-typedef struct exercitos {
-    char playerName[MAX_NAME];
-    char armyColor[10];
-    Territory playerTerritories[MAX_PLAYER_TERRITORIES];
-    int totalTerritories;
-    int totalTroops;
-} Player;
-
-void playerRegistry(Player jogadores[], int *numJogadores);
-void initPlayers(Player jogadores[]);
-void chooseInitialTerritories(Player jogadores[], int numJogadores, Territory mapa[], int totalTerritories);
+Jogador* inicializarJogadores(int numJogadores);
+void verificarMissoes(Jogador* jogadores, int numJogadores, const Territorio* mapa, int tamanho);
 
 #endif
